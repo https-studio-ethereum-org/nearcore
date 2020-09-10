@@ -43,12 +43,13 @@ MAX_STAKE = int(1e32)
 
 # How many times to try to send transactions to each validator.
 # Is only applicable in the scenarios where we expect failures in tx sends.
-SEND_TX_ATTEMPTS = 5
+SEND_TX_ATTEMPTS = 10
 
 epoch_length = 25
 block_timeout = 20  # if two blocks are not produced within that many seconds, the test will fail. The timeout is increased if nodes are restarted or network is being messed up with
 balances_timeout = 15  # how long to tolerate for balances to update after txs are sent
 tx_tolerance = 0.1
+wait_if_restart = False # whether to wait between `kill` and `start`, is needed when nodes are proxied
 
 assert balances_timeout * 2 <= TIMEOUT_SHUTDOWN
 assert block_timeout * 2 <= TIMEOUT_SHUTDOWN
@@ -83,8 +84,11 @@ def get_recent_hash(node, sync_timeout):
     info = node.json_rpc('block', [hash_])
 
     for attempt in range(sync_timeout):
-        if 'error' in info and info['error']['data'] == 'IsSyncing':
+        if 'error' in info and 'unavailable on the node' in info['error']['data']:
             time.sleep(1)
+
+            status = node.get_status()
+            hash_ = status['sync_info']['latest_block_hash']
             info = node.json_rpc('block', [hash_])
 
     assert 'result' in info, info
@@ -151,7 +155,7 @@ def monkey_node_restart(stopped, error, nodes, nonces):
             _, h = get_recent_hash(node, 30)
             assert h >= heights_after_restart[node_idx], "%s > %s" % (
                 h, heights_after_restart[node_idx])
-            if h > heights_after_restart[node_idx]:
+            if h > heights_after_restart[node_idx] + 5:
                 break
             time.sleep(1)
 
@@ -159,8 +163,11 @@ def monkey_node_restart(stopped, error, nodes, nonces):
         logging.info("NUKING NODE %s%s" % (node_idx, " AND WIPING ITS STORAGE" if reset_data else ""))
         node.kill()
         if reset_data:
-            #node.reset_data() # TODO
-            pass
+            if not wait_if_restart: # MOO
+                node.reset_data() # TODO
+            pass # MOO
+        if wait_if_restart:
+            time.sleep(7)
         node.start(boot_node.node_key.pk, boot_node.addr())
         logging.info("NODE %s IS BACK UP" % node_idx)
 
@@ -511,7 +518,7 @@ def blocks_tracker(stopped, error, nodes, nonces):
 
 
 def doit(s, n, N, k, monkeys, timeout):
-    global block_timeout, balances_timeout, tx_tolerance, epoch_length
+    global block_timeout, balances_timeout, tx_tolerance, epoch_length, wait_if_restart
 
     assert 2 <= n <= N
 
@@ -541,8 +548,9 @@ def doit(s, n, N, k, monkeys, timeout):
     if 'monkey_local_network' in monkey_names or 'monkey_global_network' in monkey_names:
         balances_timeout += 20
 
-    if 'monkey_packets_drop':
-        balances_timeout += 30
+    if 'monkey_packets_drop' in monkey_names:
+        wait_if_restart = True
+        balances_timeout += 10
 
     if 'monkey_node_restart' in monkey_names or 'monkey_node_set' in monkey_names:
         balances_timeout += 10
@@ -615,12 +623,28 @@ def doit(s, n, N, k, monkeys, timeout):
     logging.info("==========================================")
     stopped.value = 1
     started_shutdown = time.time()
+    proxies_stopped = False
+
     while True:
         check_errors()
         still_running = [name for (p, name) in ps if p.is_alive()]
 
         if len(still_running) == 0:
             break
+
+        # If the test is running with proxies, `node_restart` and `node_set` can get
+        # stuck because the proxies now are their child processes. We can't kill the
+        # proxies rigth away, because that would interfere with block production, and
+        # might prevnet other workers (e.g. block_tracker) from completing in a timely
+        # manner. Thus, kill the proxies some time into the shut down process.
+        if time.time() - started_shutdown > TIMEOUT_SHUTDOWN / 2 and not proxies_stopped:
+            logging.info("Shutdown is %s seconds in, shutting down proxies if any" % (TIMEOUT_SHUTDOWN / 2))
+            if boot_node.proxy is not None:
+                boot_node.proxy.global_stopped.value = 1
+                for p in boot_node.proxy.ps:
+                    p.terminate()
+            proxies_stopped = True
+
 
         if time.time() - started_shutdown > TIMEOUT_SHUTDOWN:
             for (p, _) in ps:
