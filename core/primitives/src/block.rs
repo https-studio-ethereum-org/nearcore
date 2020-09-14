@@ -2,6 +2,7 @@ use std::cmp::max;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use chrono::{DateTime, Utc};
+use deepsize::DeepSizeOf;
 use near_crypto::Signature;
 use num_rational::Rational;
 use primitive_types::U256;
@@ -41,7 +42,7 @@ pub enum BlockValidityError {
     InvalidChallengeRoot,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, Eq, PartialEq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, Eq, PartialEq, DeepSizeOf)]
 pub struct BlockV1 {
     pub header: BlockHeader,
     pub chunks: Vec<ShardChunkHeader>,
@@ -54,7 +55,7 @@ pub struct BlockV1 {
 
 /// Versioned Block data structure.
 /// For each next version, document what are the changes between versions.
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, Eq, PartialEq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, Eq, PartialEq, DeepSizeOf)]
 pub enum Block {
     BlockV1(Box<BlockV1>),
 }

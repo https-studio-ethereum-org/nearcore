@@ -5,6 +5,7 @@ use std::sync::{Arc, RwLock};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use chrono::Utc;
+use deepsize::DeepSizeOf;
 use log::debug;
 use num_rational::Rational;
 use serde::Serialize;

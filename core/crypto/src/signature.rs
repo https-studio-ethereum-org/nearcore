@@ -5,6 +5,7 @@ use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind, Write};
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use deepsize::DeepSizeOf;
 use lazy_static::lazy_static;
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
@@ -66,7 +67,7 @@ fn split_key_type_data(value: &str) -> Result<(KeyType, &str), Box<dyn std::erro
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, DeepSizeOf)]
 pub struct Secp256K1PublicKey([u8; 64]);
 
 impl std::fmt::Debug for Secp256K1PublicKey {
@@ -95,7 +96,7 @@ impl Ord for Secp256K1PublicKey {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, DeepSizeOf)]
 pub struct ED25519PublicKey(pub [u8; ed25519_dalek::PUBLIC_KEY_LENGTH]);
 
 impl std::fmt::Debug for ED25519PublicKey {
@@ -125,7 +126,7 @@ impl Ord for ED25519PublicKey {
 }
 
 /// Public key container supporting different curves.
-#[derive(Clone, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Clone, PartialEq, PartialOrd, Ord, Eq, DeepSizeOf)]
 pub enum PublicKey {
     ED25519(ED25519PublicKey),
     SECP256K1(Secp256K1PublicKey),
@@ -462,7 +463,7 @@ impl<'de> serde::Deserialize<'de> for SecretKey {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, DeepSizeOf)]
 pub struct Secp256K1Signature([u8; 65]);
 
 impl Eq for Secp256K1Signature {}
@@ -480,7 +481,7 @@ impl Debug for Secp256K1Signature {
 }
 
 /// Signature container supporting different curves.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, DeepSizeOf)]
 pub enum Signature {
     ED25519(ed25519_dalek::Signature),
     SECP256K1(Secp256K1Signature),

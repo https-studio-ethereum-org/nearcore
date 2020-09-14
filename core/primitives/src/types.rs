@@ -2,6 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use derive_more::{AsRef as DeriveAsRef, From as DeriveFrom};
 use serde::{Deserialize, Serialize};
 
+use deepsize::DeepSizeOf;
 use near_crypto::PublicKey;
 
 use crate::account::{AccessKey, Account};
@@ -388,12 +389,13 @@ impl StateRootNode {
     BorshSerialize,
     BorshDeserialize,
     Serialize,
+    DeepSizeOf,
 )]
 #[as_ref(forward)]
 pub struct EpochId(pub CryptoHash);
 
 /// Stores validator and its stake.
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, PartialEq, Eq, DeepSizeOf)]
 pub struct ValidatorStake {
     /// Account that stakes money.
     pub account_id: AccountId,

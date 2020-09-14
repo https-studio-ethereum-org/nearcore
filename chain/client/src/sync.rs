@@ -1,3 +1,4 @@
+use deepsize::DeepSizeOf;
 use near_chain::Error;
 use std::cmp::min;
 use std::collections::HashMap;
@@ -359,6 +360,7 @@ impl BlockSyncCache {
 }
 
 /// Helper to track block syncing.
+#[derive(DeepSizeOf)]
 pub struct BlockSync {
     network_adapter: Arc<dyn NetworkAdapter>,
     blocks_requested: NumBlocks,

@@ -5,6 +5,7 @@ use std::time::{Duration as TimeDuration, Instant};
 use borsh::BorshSerialize;
 use chrono::Duration;
 use chrono::Utc;
+use deepsize::DeepSizeOf;
 use log::{debug, error, info, warn};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
@@ -82,12 +83,14 @@ enum ApplyChunksMode {
     NextEpoch,
 }
 
+#[derive(DeepSizeOf)]
 pub struct Orphan {
     block: Block,
     provenance: Provenance,
     added: Instant,
 }
 
+#[derive(DeepSizeOf)]
 pub struct OrphanBlockPool {
     orphans: HashMap<CryptoHash, Orphan>,
     height_idx: HashMap<BlockHeight, Vec<CryptoHash>>,
@@ -173,6 +176,7 @@ impl OrphanBlockPool {
 
 /// Facade to the blockchain block processing and storage.
 /// Provides current view on the state according to the chain state.
+/// #[
 pub struct Chain {
     store: ChainStore,
     pub runtime_adapter: Arc<dyn RuntimeAdapter>,

@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use deepsize::DeepSizeOf;
 use serde::Serialize;
 
 use near_crypto::Signature;
@@ -53,7 +54,7 @@ impl BlockStatus {
 }
 
 /// Options for block origin.
-#[derive(Eq, PartialEq, Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug, DeepSizeOf)]
 pub enum Provenance {
     /// No provenance.
     NONE,
@@ -134,6 +135,7 @@ impl BlockHeaderInfo {
 }
 
 /// Block economics config taken from genesis config
+#[derive(DeepSizeOf)]
 pub struct BlockEconomicsConfig {
     gas_price_adjustment_rate: Rational,
     min_gas_price: Balance,
@@ -591,7 +593,7 @@ pub struct ReceiptList<'a>(pub ShardId, pub &'a Vec<Receipt>);
 
 /// The last known / checked height and time when we have processed it.
 /// Required to keep track of skipped blocks and not fallback to produce blocks at lower height.
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, Default)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, Default, DeepSizeOf)]
 pub struct LatestKnown {
     pub height: BlockHeight,
     pub seen: u64,

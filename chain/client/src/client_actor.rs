@@ -87,6 +87,15 @@ pub struct ClientActor {
     sync_started: bool,
 }
 
+/*
+impl MemorySize for ClientActor {
+    fn memory_size(&self) -> u64 {
+        let mut res = 0;
+
+        res
+    }
+}            */
+
 /// Blocks the program until given genesis time arrives.
 fn wait_until_genesis(genesis_time: &DateTime<Utc>) {
     loop {
