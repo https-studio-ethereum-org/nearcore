@@ -6,6 +6,7 @@ use std::marker::PhantomPinned;
 use std::sync::RwLock;
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use deepsize::{known_deep_size, DeepSizeOf};
 #[cfg(feature = "single_thread_rocksdb")]
 use rocksdb::Env;
 use rocksdb::{
@@ -267,22 +268,27 @@ impl DBTransaction {
     }
 }
 
+// #[derive(DeepSizeOf)]
 pub struct RocksDB {
     db: DB,
     cfs: Vec<*const ColumnFamily>,
     _pin: PhantomPinned,
 }
 
+// TODO inaccurate
+known_deep_size!(0, RocksDB);
+
 // DB was already Send+Sync. cf and read_options are const pointers using only functions in
 // this file and safe to share across threads.
 unsafe impl Send for RocksDB {}
 unsafe impl Sync for RocksDB {}
 
+#[derive(DeepSizeOf)]
 pub struct TestDB {
     db: RwLock<Vec<HashMap<Vec<u8>, Vec<u8>>>>,
 }
 
-pub trait Database: Sync + Send {
+pub trait Database: Sync + Send + DeepSizeOf {
     fn transaction(&self) -> DBTransaction {
         DBTransaction { ops: Vec::new() }
     }

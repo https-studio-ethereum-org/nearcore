@@ -312,6 +312,7 @@ pub trait ChainStoreAccess {
 }
 
 /// All chain-related database operations.
+#[derive(DeepSizeOf)]
 pub struct ChainStore {
     store: Arc<Store>,
     /// Genesis block height.

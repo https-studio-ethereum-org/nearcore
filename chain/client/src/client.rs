@@ -41,6 +41,8 @@ use crate::metrics;
 use crate::sync::{BlockSync, HeaderSync, StateSync, StateSyncResult};
 use crate::types::{Error, ShardSyncDownload};
 use crate::SyncStatus;
+use actix::dev::{MessageResponse, ResponseChannel};
+use actix::{Actor, Message};
 
 const NUM_REBROADCAST_BLOCKS: usize = 30;
 
@@ -83,7 +85,6 @@ pub struct Client {
     /// again to prevent network from stalling if a large percentage of the network missed a block
     last_time_head_progress_made: Instant,
 }
-
 pub struct CatchupMessage {
     pub(crate) challenges: Vec<ChallengeBody>,
     pub(crate) blocks_missing_chunks: Vec<ShardChunkHeader>,

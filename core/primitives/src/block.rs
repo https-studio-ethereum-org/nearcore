@@ -24,7 +24,9 @@ use crate::utils::to_timestamp;
 use crate::validator_signer::{EmptyValidatorSigner, ValidatorSigner};
 use crate::version::ProtocolVersion;
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Clone, Debug, Eq, PartialEq, Default)]
+#[derive(
+    BorshSerialize, BorshDeserialize, Serialize, Clone, Debug, Eq, PartialEq, Default, DeepSizeOf,
+)]
 pub struct GenesisId {
     /// Chain Id
     pub chain_id: String,
@@ -32,7 +34,7 @@ pub struct GenesisId {
     pub hash: CryptoHash,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Clone, Debug, Eq, PartialEq)]
+#[derive(DeepSizeOf)]
 pub enum BlockValidityError {
     InvalidStateRoot,
     InvalidReceiptRoot,
@@ -433,7 +435,7 @@ impl Block {
 /// The tip of a fork. A handle to the fork ancestry from its leaf in the
 /// blockchain tree. References the max height and the latest and previous
 /// blocks for convenience
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, PartialEq, DeepSizeOf)]
 pub struct Tip {
     /// Height of the tip (max height of the fork)
     pub height: BlockHeight,

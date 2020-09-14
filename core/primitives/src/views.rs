@@ -9,6 +9,7 @@ use std::fmt;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use chrono::{DateTime, Utc};
+use deepsize::DeepSizeOf;
 use serde::{Deserialize, Serialize};
 
 use near_crypto::{PublicKey, Signature};
@@ -214,7 +215,17 @@ pub enum QueryResponseKind {
     AccessKeyList(AccessKeyList),
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Debug,
+    PartialEq,
+    Eq,
+    Clone,
+    DeepSizeOf,
+)]
 #[serde(tag = "request_type", rename_all = "snake_case")]
 pub enum QueryRequest {
     ViewAccount {
@@ -485,7 +496,7 @@ impl From<BlockHeaderView> for BlockHeader {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, BorshDeserialize, BorshSerialize, DeepSizeOf)]
 pub struct BlockHeaderInnerLiteView {
     pub height: BlockHeight,
     pub epoch_id: CryptoHash,
@@ -937,7 +948,17 @@ impl fmt::Debug for FinalExecutionOutcomeView {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+#[derive(
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    DeepSizeOf,
+)]
 pub struct ValidatorStakeView {
     pub account_id: AccountId,
     pub public_key: PublicKey,
@@ -1111,7 +1132,7 @@ pub struct NextEpochValidatorInfo {
     pub shards: Vec<ShardId>,
 }
 
-#[derive(Serialize, Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Serialize, Debug, Clone, BorshDeserialize, BorshSerialize, DeepSizeOf)]
 pub struct LightClientBlockView {
     pub prev_block_hash: CryptoHash,
     pub next_block_inner_hash: CryptoHash,

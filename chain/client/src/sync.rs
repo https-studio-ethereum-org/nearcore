@@ -71,6 +71,7 @@ pub fn highest_height_peer(highest_height_peers: &Vec<FullPeerInfo>) -> Option<F
 
 /// Helper to keep track of sync headers.
 /// Handles major re-orgs by finding closest header that matches and re-downloading headers from that point.
+#[derive(DeepSizeOf)]
 pub struct HeaderSync {
     network_adapter: Arc<dyn NetworkAdapter>,
     history_locator: Vec<(BlockHeight, CryptoHash)>,
@@ -331,7 +332,7 @@ fn get_locator_heights(height: u64) -> Vec<u64> {
 
 /// Cache for block sync that stores the hashes to request in insertion order.
 /// It also maintains the last final block header to minimize the impact of reorgs.
-#[derive(Default)]
+#[derive(Default, DeepSizeOf)]
 struct BlockSyncCache {
     hashes: LinkedHashMap<CryptoHash, ()>,
     last_header: Option<BlockHeader>,
@@ -610,6 +611,7 @@ pub enum StateSyncResult {
     Completed,
 }
 
+#[derive(DeepSizeOf)]
 struct PendingRequestStatus {
     missing_parts: usize,
     wait_until: DateTime<Utc>,
@@ -628,6 +630,7 @@ impl PendingRequestStatus {
 }
 
 /// Helper to track state sync.
+#[derive(DeepSizeOf)]
 pub struct StateSync {
     network_adapter: Arc<dyn NetworkAdapter>,
 

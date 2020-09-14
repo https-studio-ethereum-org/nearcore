@@ -39,10 +39,12 @@ extern crate core;
 
 #[cfg(feature = "derive")]
 extern crate self as deepsize;
+use cached::SizedCache;
 #[cfg(feature = "derive")]
 pub use deepsize_derive::*;
 
 use core::mem::{size_of, size_of_val};
+use linked_hash_map::LinkedHashMap;
 
 #[cfg(test)]
 mod test;
@@ -133,12 +135,20 @@ pub trait DeepSizeOf {
     /// }
     /// ```
     fn deep_size_of_children(&self, context: &mut Context) -> usize;
+
+    /// Added by Piotr
+    fn size_of_val(&self) -> usize {
+        size_of_val(self)
+    }
 }
 
 #[cfg(not(feature = "std"))]
 use alloc::collections::BTreeSet as GenericSet;
 #[cfg(feature = "std")]
 use std::collections::HashSet as GenericSet;
+use std::ops::Deref;
+use std::pin::Pin;
+use std::sync::{Mutex, RwLock};
 
 /// The context of which references have already been seen.
 /// This should only be used in the implementation of the
@@ -175,14 +185,14 @@ impl Context {
     }
 
     /// Adds an [`Arc`](std::sync::Arc) to the list of visited [`Arc`](std::sync::Arc)s
-    fn add_arc<T>(&mut self, arc: &alloc::sync::Arc<T>) {
+    fn add_arc<T: ?Sized>(&mut self, arc: &alloc::sync::Arc<T>) {
         // Somewhat unsafe way of getting a pointer to the inner `ArcInner`
         // object without changing the count
         let pointer: usize = unsafe { *(arc as *const alloc::sync::Arc<T> as *const usize) };
         self.arcs.insert(pointer);
     }
     /// Checks if an [`Arc`](std::sync::Arc) is in the list visited [`Arc`](std::sync::Arc)s
-    fn contains_arc<T>(&self, arc: &alloc::sync::Arc<T>) -> bool {
+    fn contains_arc<T: ?Sized>(&self, arc: &alloc::sync::Arc<T>) -> bool {
         let pointer: usize = unsafe { *(arc as *const alloc::sync::Arc<T> as *const usize) };
         self.arcs.contains(&pointer)
     }
@@ -367,7 +377,7 @@ where
 
 impl<T> DeepSizeOf for alloc::sync::Arc<T>
 where
-    T: DeepSizeOf,
+    T: DeepSizeOf + ?Sized,
 {
     fn deep_size_of_children(&self, context: &mut Context) -> usize {
         if context.contains_arc(self) {
@@ -376,22 +386,7 @@ where
             context.add_arc(self);
             let val: &T = &*self;
             // Size of the Arc, size of the value, size of the allocations of the value
-            size_of_val(val) + val.deep_size_of_children(context)
-        }
-    }
-}
-
-impl<T> DeepSizeOf for alloc::rc::Rc<T>
-where
-    T: DeepSizeOf,
-{
-    fn deep_size_of_children(&self, context: &mut Context) -> usize {
-        if context.contains_rc(self) {
-            0
-        } else {
-            context.add_rc(self);
-            let val: &T = &*self;
-            size_of_val(val) + val.deep_size_of_children(context)
+            val.size_of_val() + val.deep_size_of_children(context)
         }
     }
 }
@@ -426,5 +421,81 @@ where
 {
     fn deep_size_of_children(&self, context: &mut Context) -> usize {
         self.iter().map(|child| size_of_val(&*child) + child.deep_size_of_children(context)).sum()
+    }
+}
+
+// added by Piotr
+impl<T> DeepSizeOf for RwLock<T>
+where
+    T: DeepSizeOf,
+{
+    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+        self.write().unwrap().size_of_val() + self.write().unwrap().deep_size_of_children(context)
+    }
+}
+
+// added by Piotr
+impl<T> DeepSizeOf for Mutex<T>
+where
+    T: DeepSizeOf,
+{
+    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+        self.lock().unwrap().size_of_val() + self.lock().unwrap().deep_size_of_children(context)
+    }
+}
+
+// added by Piotr
+impl<T> DeepSizeOf for Pin<T>
+where
+    T: DeepSizeOf,
+{
+    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+        self.deref().deep_size_of_children(context)
+    }
+}
+
+impl<K: DeepSizeOf, V: DeepSizeOf> DeepSizeOf for SizedCache<K, V>
+where
+    K: std::cmp::Eq + std::hash::Hash,
+{
+    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+        self.key_order()
+            .map(|child| size_of_val(&*child) + child.deep_size_of_children(context))
+            .sum::<usize>()
+            + self
+                .value_order()
+                .map(|child| size_of_val(&*child) + child.deep_size_of_children(context))
+                .sum::<usize>()
+    }
+}
+
+impl<K, V> DeepSizeOf for std::collections::BTreeMap<K, V>
+where
+    K: DeepSizeOf,
+    V: DeepSizeOf,
+{
+    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+        self.iter().fold(0, |sum, (key, val)| {
+            sum + key.deep_size_of_children(context) + val.deep_size_of_children(context)
+        })
+    }
+}
+
+#[cfg(feature = "std")]
+impl<K, V, S> DeepSizeOf for LinkedHashMap<K, V, S>
+where
+    K: DeepSizeOf + Eq + std::hash::Hash,
+    V: DeepSizeOf,
+    S: std::hash::BuildHasher,
+{
+    // FIXME
+    // How much more overhead is there to a hashmap? The docs say it is
+    // essensially just a Vec<Option<(u64, K, V)>>
+    // Update this to work for hashbrown::HashMap
+    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+        self.iter().fold(0, |sum, (key, val)| {
+            sum + key.deep_size_of_children(context) + val.deep_size_of_children(context)
+        }) + self.capacity() * size_of::<Option<(u64, K, V)>>()
+        // Size of container capacity
     }
 }

@@ -6,6 +6,7 @@ edition = "2018"
 default-run = "neard"
 
 [dependencies]
+deepsize = { path = "../deepsize" }
 actix = "0.9"
 actix-web = { version = "2", features = [ "openssl" ] }
 byteorder = "1.2"

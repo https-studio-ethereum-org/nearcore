@@ -224,7 +224,7 @@ where
 /// Bridge between the chain and the runtime.
 /// Main function is to update state given transactions.
 /// Additionally handles validators.
-pub trait RuntimeAdapter: Send + Sync {
+pub trait RuntimeAdapter: Send + Sync + DeepSizeOf {
     /// Get store and genesis state roots
     fn genesis_state(&self) -> (Arc<Store>, Vec<StateRoot>);
 

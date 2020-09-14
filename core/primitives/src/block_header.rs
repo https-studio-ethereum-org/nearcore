@@ -125,7 +125,7 @@ pub struct Approval {
 }
 
 /// Block approval by other block producers.
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, PartialEq, Eq, DeepSizeOf)]
 pub struct ApprovalMessage {
     pub approval: Approval,
     pub target: AccountId,

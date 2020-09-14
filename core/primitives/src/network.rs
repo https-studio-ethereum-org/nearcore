@@ -78,7 +78,7 @@ impl fmt::Debug for PeerId {
 }
 
 /// Account announcement information
-#[derive(BorshSerialize, BorshDeserialize, Serialize, PartialEq, Eq, Clone, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, PartialEq, Eq, Clone, Debug, DeepSizeOf)]
 pub struct AnnounceAccount {
     /// AccountId to be announced.
     pub account_id: AccountId,

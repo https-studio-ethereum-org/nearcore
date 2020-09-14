@@ -25,6 +25,8 @@ repository = "https://github.com/Aeledfyr/deepsize/"
 
 [dependencies]
 
+linked-hash-map = "0.5.3"
+cached = "0.12"
 chrono = { version = "0.4.4", features = ["serde"] }
 num-rational = "0.2.4"
 ed25519-dalek = "=1.0.0-pre.3"

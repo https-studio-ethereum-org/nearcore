@@ -1,5 +1,3 @@
-use crate::{Context, DeepSizeOf};
-
 #[cfg(features = "slotmap")]
 mod slotmap_impl {
     use super::*;

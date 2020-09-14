@@ -10,6 +10,7 @@ use std::{fmt, io};
 use borsh::{BorshDeserialize, BorshSerialize};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use cached::{Cached, SizedCache};
+use deepsize::DeepSizeOf;
 
 pub use db::DBCol::{self, *};
 pub use db::{
@@ -42,6 +43,7 @@ pub mod migrations;
 pub mod test_utils;
 mod trie;
 
+#[derive(DeepSizeOf)]
 pub struct Store {
     storage: Pin<Arc<dyn Database>>,
 }

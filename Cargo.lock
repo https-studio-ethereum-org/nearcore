@@ -1114,9 +1114,11 @@ dependencies = [
 name = "deepsize"
 version = "0.1.2"
 dependencies = [
+ "cached",
  "chrono",
  "deepsize_derive",
  "ed25519-dalek",
+ "linked-hash-map",
  "num-rational 0.2.4",
  "slotmap",
 ]
@@ -2463,6 +2465,7 @@ dependencies = [
  "borsh",
  "cached",
  "chrono",
+ "deepsize 0.1.2",
  "futures",
  "log",
  "near-chain",
@@ -2546,6 +2549,7 @@ version = "0.0.1"
 dependencies = [
  "borsh",
  "cached",
+ "deepsize 0.1.2",
  "log",
  "near-chain",
  "near-crypto",
@@ -2683,6 +2687,7 @@ name = "near-pool"
 version = "0.1.0"
 dependencies = [
  "borsh",
+ "deepsize 0.1.2",
  "near-crypto",
  "near-primitives",
  "rand 0.7.3",
@@ -2770,6 +2775,7 @@ dependencies = [
 name = "near-runtime-configs"
 version = "0.1.0"
 dependencies = [
+ "deepsize 0.1.2",
  "near-primitives",
  "near-runtime-fees",
  "near-vm-logic",
@@ -2780,6 +2786,7 @@ dependencies = [
 name = "near-runtime-fees"
 version = "2.2.0"
 dependencies = [
+ "deepsize 0.1.2",
  "num-rational 0.2.4",
  "serde",
 ]
@@ -2808,6 +2815,7 @@ dependencies = [
  "borsh",
  "byteorder",
  "cached",
+ "deepsize 0.1.2",
  "derive_more",
  "elastic-array",
  "lazy_static",
@@ -2841,6 +2849,7 @@ name = "near-vm-errors"
 version = "2.2.0"
 dependencies = [
  "borsh",
+ "deepsize 0.1.2",
  "near-rpc-error-macro",
  "serde",
 ]
@@ -2852,6 +2861,7 @@ dependencies = [
  "base64 0.11.0",
  "bs58",
  "byteorder",
+ "deepsize 0.1.2",
  "near-runtime-fees",
  "near-runtime-utils",
  "near-vm-errors",
@@ -2931,6 +2941,7 @@ dependencies = [
  "byteorder",
  "chrono",
  "clap 2.33.0",
+ "deepsize 0.1.2",
  "delay-detector",
  "dirs",
  "easy-ext",
@@ -3000,6 +3011,7 @@ dependencies = [
  "borsh",
  "byteorder",
  "cached",
+ "deepsize 0.1.2",
  "hex",
  "indicatif 0.13.0",
  "lazy_static",

@@ -8,6 +8,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
+use deepsize::DeepSizeOf;
 use num_rational::Rational;
 use serde::{Deserialize, Serialize};
 use smart_default::SmartDefault;
@@ -39,7 +40,7 @@ fn default_protocol_upgrade_stake_threshold() -> Rational {
 
 const MAX_GAS_PRICE: Balance = 10_000_000_000_000_000_000_000;
 
-#[derive(Debug, Clone, SmartDefault, Serialize, Deserialize)]
+#[derive(Debug, Clone, SmartDefault, Serialize, Deserialize, DeepSizeOf)]
 pub struct GenesisConfig {
     /// Protocol version that this genesis works with.
     pub protocol_version: ProtocolVersion,

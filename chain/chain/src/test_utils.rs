@@ -45,18 +45,29 @@ use crate::types::{ApplyTransactionResult, BlockHeaderInfo, ChainGenesis};
 use crate::{BlockHeader, DoomslugThresholdMode, RuntimeAdapter};
 
 #[derive(
-    BorshSerialize, BorshDeserialize, Serialize, Hash, PartialEq, Eq, Ord, PartialOrd, Clone, Debug,
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Hash,
+    PartialEq,
+    Eq,
+    Ord,
+    PartialOrd,
+    Clone,
+    Debug,
+    DeepSizeOf,
 )]
 struct AccountNonce(AccountId, Nonce);
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Clone, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Clone, Debug, DeepSizeOf)]
 struct KVState {
     amounts: HashMap<AccountId, u128>,
     receipt_nonces: HashSet<CryptoHash>,
     tx_nonces: HashSet<AccountNonce>,
 }
 
-/// Simple key value runtime for tests.
+/// Simple key value runtime for tests
+#[derive(DeepSizeOf)]
 pub struct KeyValueRuntime {
     store: Arc<Store>,
     tries: ShardTries,

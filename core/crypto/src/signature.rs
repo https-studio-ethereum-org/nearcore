@@ -5,7 +5,7 @@ use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind, Write};
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use deepsize::DeepSizeOf;
+use deepsize::{known_deep_size, DeepSizeOf};
 use lazy_static::lazy_static;
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
@@ -327,6 +327,8 @@ pub enum SecretKey {
     ED25519(ED25519SecretKey),
     SECP256K1(secp256k1::key::SecretKey),
 }
+
+known_deep_size!(0, SecretKey);
 
 impl SecretKey {
     pub fn key_type(&self) -> KeyType {
