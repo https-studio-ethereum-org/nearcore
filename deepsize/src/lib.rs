@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![forbid(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -198,7 +199,6 @@ impl Context {
     }
 
     /// Adds an [`Rc`](std::rc::Rc) to the list of visited [`Rc`](std::rc::Rc)s
-    #![allow(dead_code)]
     fn add_rc<T>(&mut self, rc: &alloc::rc::Rc<T>) {
         // Somewhat unsafe way of getting a pointer to the inner `RcBox`
         // object without changing the count
@@ -207,7 +207,6 @@ impl Context {
     }
     /// Checks if an [`Rc`](std::rc::Rc) is in the list visited [`Rc`](std::rc::Rc)s
     /// Adds an [`Rc`](std::rc::Rc) to the list of visited [`Rc`](std::rc::Rc)s
-    #![allow(dead_code)]
     fn contains_rc<T>(&self, rc: &alloc::rc::Rc<T>) -> bool {
         let pointer: usize = unsafe { *(rc as *const alloc::rc::Rc<T> as *const usize) };
         self.rcs.contains(&pointer)
