@@ -1119,6 +1119,7 @@ dependencies = [
  "deepsize_derive",
  "ed25519-dalek",
  "linked-hash-map",
+ "log",
  "num-rational 0.2.4",
  "slotmap",
 ]

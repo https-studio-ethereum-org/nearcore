@@ -145,11 +145,13 @@ pub trait DeepSizeOf {
 
 #[cfg(not(feature = "std"))]
 use alloc::collections::BTreeSet as GenericSet;
+use log::info;
 #[cfg(feature = "std")]
 use std::collections::HashSet as GenericSet;
-use std::ops::Deref;
+use std::convert::TryInto;
+use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
-use std::sync::{Mutex, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 
 /// The context of which references have already been seen.
 /// This should only be used in the implementation of the
@@ -421,7 +423,10 @@ where
     T: DeepSizeOf + Sized,
 {
     fn deep_size_of_children(&self, context: &mut Context) -> usize {
-        self.iter().map(|child| size_of_val(&*child) + child.deep_size_of_children(context)).sum()
+        self.iter()
+            .map(|child| size_of_val(&*child) + child.deep_size_of_children(context))
+            .sum::<usize>()
+            + self.size_of_val()
     }
 }
 
@@ -431,7 +436,11 @@ where
     T: DeepSizeOf,
 {
     fn deep_size_of_children(&self, context: &mut Context) -> usize {
-        self.write().unwrap().size_of_val() + self.write().unwrap().deep_size_of_children(context)
+        if let Ok(x) = self.write() {
+            x.deep_size_of()
+        } else {
+            0
+        }
     }
 }
 
@@ -441,17 +450,22 @@ where
     T: DeepSizeOf,
 {
     fn deep_size_of_children(&self, context: &mut Context) -> usize {
-        self.lock().unwrap().size_of_val() + self.lock().unwrap().deep_size_of_children(context)
+        if let Ok(x) = self.lock() {
+            x.deep_size_of()
+        } else {
+            0
+        }
     }
 }
 
 // added by Piotr
-impl<T> DeepSizeOf for Pin<T>
+impl<T> DeepSizeOf for Pin<Arc<T>>
 where
-    T: DeepSizeOf,
+    T: DeepSizeOf + ?Sized,
 {
     fn deep_size_of_children(&self, context: &mut Context) -> usize {
-        self.deref().deep_size_of_children(context)
+        let x: &T = self.deref();
+        x.deep_size_of()
     }
 }
 
@@ -460,13 +474,17 @@ where
     K: std::cmp::Eq + std::hash::Hash,
 {
     fn deep_size_of_children(&self, context: &mut Context) -> usize {
-        self.key_order()
+        info!("XXX");
+        let res = self
+            .key_order()
             .map(|child| size_of_val(&*child) + child.deep_size_of_children(context))
             .sum::<usize>()
             + self
                 .value_order()
                 .map(|child| size_of_val(&*child) + child.deep_size_of_children(context))
-                .sum::<usize>()
+                .sum::<usize>();
+        info!("XX {}", res);
+        res
     }
 }
 

@@ -25,6 +25,7 @@ repository = "https://github.com/Aeledfyr/deepsize/"
 
 [dependencies]
 
+log = "0.4"
 linked-hash-map = "0.5.3"
 cached = "0.12"
 chrono = { version = "0.4.4", features = ["serde"] }

@@ -170,7 +170,7 @@ impl ClientActor {
             chunk_request_retry_next_attempt: now,
             sync_started: false,
         };
-        print!("PIOTR3 {}", actor.deep_size_of());
+        info!("PIOTR3 {}", actor.deep_size_of());
         Ok(actor)
     }
 }
@@ -1295,7 +1295,7 @@ impl ClientActor {
 
     fn log_mem_usage(&self, ctx: &mut Context<Self>) {
         ctx.run_later(Duration::from_secs(10), move |act, ctx| {
-            print!("PIOTR4 ClientActor: {}", act.deep_size_of());
+            info!("PIOTR4 ClientActor: {}", act.deep_size_of());
             act.log_mem_usage(ctx);
         });
     }
