@@ -1114,6 +1114,7 @@ dependencies = [
 name = "deepsize"
 version = "0.1.2"
 dependencies = [
+ "actix",
  "cached",
  "chrono",
  "deepsize_derive",
@@ -1121,6 +1122,7 @@ dependencies = [
  "linked-hash-map",
  "log",
  "num-rational 0.2.4",
+ "prometheus",
  "slotmap",
 ]
 

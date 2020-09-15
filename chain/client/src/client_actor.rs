@@ -195,6 +195,8 @@ impl Actor for ClientActor {
 
         // Start periodic logging of current state of the client.
         self.log_summary(ctx);
+
+        self.log_mem_usage(ctx);
     }
 }
 
@@ -1343,7 +1345,6 @@ impl ClientActor {
             );
 
             act.log_summary(ctx);
-            act.log_mem_usage(ctx);
         });
     }
 }

@@ -6,8 +6,9 @@ use std::hash::Hash;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use actix::{Actor, Addr, Handler, SyncArbiter, SyncContext};
+use actix::{Actor, Addr, Context, Handler, SyncArbiter, SyncContext};
 use cached::{Cached, SizedCache};
+use deepsize::DeepSizeOf;
 use log::{debug, error, info, trace, warn};
 
 use near_chain::{
@@ -55,6 +56,7 @@ const REQUEST_WAIT_TIME: u64 = 1000;
 const POISONED_LOCK_ERR: &str = "The lock was poisoned.";
 
 /// Request and response manager across all instances of ViewClientActor.
+#[derive(DeepSizeOf)]
 pub struct ViewClientRequestManager {
     /// Transaction query that needs to be forwarded to other shards
     pub tx_status_requests: SizedCache<CryptoHash, Instant>,
@@ -77,6 +79,7 @@ pub struct AdversarialControls {
 }
 
 /// View client provides currently committed (to the storage) view of the current chain and state.
+#[derive(DeepSizeOf)]
 pub struct ViewClientActor {
     #[cfg(feature = "adversarial")]
     pub adv: Arc<RwLock<AdversarialControls>>,
@@ -88,6 +91,8 @@ pub struct ViewClientActor {
     network_adapter: Arc<dyn NetworkAdapter>,
     pub config: ClientConfig,
     request_manager: Arc<RwLock<ViewClientRequestManager>>,
+
+    last_stats_time: Instant,
 }
 
 impl ViewClientRequestManager {
@@ -127,7 +132,18 @@ impl ViewClientActor {
             network_adapter,
             config,
             request_manager,
+            last_stats_time: Instant::now(),
         })
+    }
+
+    fn log_mem_usage(&mut self) {
+        let now = Instant::now();
+        let diff = now - self.last_stats_time;
+        if diff < Duration::from_secs(10) {
+            return;
+        }
+        info!("PIOTR4 ViewClientActor: {}", self.deep_size_of());
+        self.last_stats_time = now;
     }
 
     fn maybe_block_id_to_block_hash(
@@ -442,6 +458,7 @@ impl Handler<Query> for ViewClientActor {
     type Result = Result<Option<QueryResponse>, String>;
 
     fn handle(&mut self, msg: Query, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.handle_query(msg)
     }
 }
@@ -451,6 +468,7 @@ impl Handler<GetBlock> for ViewClientActor {
     type Result = Result<BlockView, String>;
 
     fn handle(&mut self, msg: GetBlock, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         match msg.0 {
             BlockReference::Finality(finality) => {
                 let block_hash =
@@ -487,6 +505,7 @@ impl Handler<GetBlockWithMerkleTree> for ViewClientActor {
     type Result = Result<(BlockView, PartialMerkleTree), String>;
 
     fn handle(&mut self, msg: GetBlockWithMerkleTree, ctx: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         let block_view = self.handle(GetBlock(msg.0), ctx)?;
         self.chain
             .mut_store()
@@ -500,6 +519,7 @@ impl Handler<GetChunk> for ViewClientActor {
     type Result = Result<ChunkView, String>;
 
     fn handle(&mut self, msg: GetChunk, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         match msg {
             GetChunk::ChunkHash(chunk_hash) => self.chain.get_chunk(&chunk_hash).map(Clone::clone),
             GetChunk::BlockHash(block_hash, shard_id) => {
@@ -547,6 +567,7 @@ impl Handler<TxStatus> for ViewClientActor {
     type Result = Result<Option<FinalExecutionOutcomeView>, TxStatusError>;
 
     fn handle(&mut self, msg: TxStatus, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.get_tx_status(msg.tx_hash, msg.signer_account_id)
     }
 }
@@ -555,6 +576,7 @@ impl Handler<GetValidatorInfo> for ViewClientActor {
     type Result = Result<EpochValidatorInfo, String>;
 
     fn handle(&mut self, msg: GetValidatorInfo, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.maybe_block_id_to_block_hash(msg.block_id)
             .and_then(|block_hash| self.runtime_adapter.get_validator_info(&block_hash))
             .map_err(|err| err.to_string())
@@ -565,6 +587,7 @@ impl Handler<GetValidatorOrdered> for ViewClientActor {
     type Result = Result<Vec<ValidatorStakeView>, String>;
 
     fn handle(&mut self, msg: GetValidatorOrdered, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.maybe_block_id_to_block_hash(msg.block_id)
             .and_then(|block_hash| self.chain.get_block_header(&block_hash).map(|h| h.clone()))
             .and_then(|header| {
@@ -582,6 +605,7 @@ impl Handler<GetStateChangesInBlock> for ViewClientActor {
     type Result = Result<StateChangesKindsView, String>;
 
     fn handle(&mut self, msg: GetStateChangesInBlock, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.chain
             .store()
             .get_state_changes_in_block(&msg.block_hash)
@@ -595,6 +619,7 @@ impl Handler<GetStateChanges> for ViewClientActor {
     type Result = Result<StateChangesView, String>;
 
     fn handle(&mut self, msg: GetStateChanges, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.chain
             .store()
             .get_state_changes(&msg.block_hash, &msg.state_changes_request.into())
@@ -615,6 +640,7 @@ impl Handler<GetNextLightClientBlock> for ViewClientActor {
     type Result = Result<Option<LightClientBlockView>, String>;
 
     fn handle(&mut self, request: GetNextLightClientBlock, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         let last_block_header =
             self.chain.get_block_header(&request.last_block_hash).map_err(|err| err.to_string())?;
         let last_epoch_id = last_block_header.epoch_id().clone();
@@ -658,6 +684,7 @@ impl Handler<GetExecutionOutcome> for ViewClientActor {
     type Result = Result<GetExecutionOutcomeResponse, String>;
 
     fn handle(&mut self, msg: GetExecutionOutcome, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         let (id, target_shard_id) = match msg.id {
             TransactionOrReceiptId::Transaction { transaction_hash, sender_id } => {
                 (transaction_hash, self.runtime_adapter.account_id_to_shard_id(&sender_id))
@@ -724,6 +751,7 @@ impl Handler<GetExecutionOutcomeForChunk> for ViewClientActor {
     type Result = Result<HashMap<CryptoHash, ExecutionOutcomeWithIdAndProof>, String>;
 
     fn handle(&mut self, msg: GetExecutionOutcomeForChunk, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.get_execution_outcomes_for_chunk(&msg.chunk_hash).map_err(|e| e.to_string())
     }
 }
@@ -732,6 +760,7 @@ impl Handler<GetBlockProof> for ViewClientActor {
     type Result = Result<GetBlockProofResponse, String>;
 
     fn handle(&mut self, msg: GetBlockProof, _: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         self.chain.check_block_final_and_canonical(&msg.block_hash).map_err(|e| e.to_string())?;
         self.chain
             .check_block_final_and_canonical(&msg.head_block_hash)
@@ -750,6 +779,7 @@ impl Handler<NetworkViewClientMessages> for ViewClientActor {
     type Result = NetworkViewClientResponses;
 
     fn handle(&mut self, msg: NetworkViewClientMessages, _ctx: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         match msg {
             #[cfg(feature = "adversarial")]
             NetworkViewClientMessages::Adversarial(adversarial_msg) => {
@@ -1021,6 +1051,7 @@ impl Handler<GetGasPrice> for ViewClientActor {
     type Result = Result<GasPriceView, String>;
 
     fn handle(&mut self, msg: GetGasPrice, _ctx: &mut Self::Context) -> Self::Result {
+        self.log_mem_usage();
         let header = self
             .maybe_block_id_to_block_hash(msg.block_id)
             .and_then(|block_hash| self.chain.get_block_header(&block_hash));

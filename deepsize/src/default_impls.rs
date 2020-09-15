@@ -1,5 +1,7 @@
 use crate::{Context, DeepSizeOf};
+use actix::Message;
 use chrono::{DateTime, Duration, Utc};
+use std::net::IpAddr;
 use std::net::SocketAddr;
 
 /// A macro to generate an impl for types with known inner allocation sizes.
@@ -60,6 +62,23 @@ known_deep_size!(0, u128, i128);
 known_deep_size!(0, ed25519_dalek::Signature, std::time::Instant, num_rational::Rational);
 known_deep_size!(0, DateTime<Utc>, Duration);
 known_deep_size!(0, SocketAddr);
+known_deep_size!(0, IpAddr, prometheus::IntCounter);
+
+impl<T: actix::Actor> DeepSizeOf for actix::Addr<T> {
+    fn deep_size_of_children(&self, _: &mut Context) -> usize {
+        0
+    }
+}
+
+impl<M: Message> DeepSizeOf for actix::Recipient<M>
+where
+    M: Message + Send,
+    M::Result: Send,
+{
+    fn deep_size_of_children(&self, _: &mut Context) -> usize {
+        0
+    }
+}
 
 impl<T: ?Sized> DeepSizeOf for core::marker::PhantomData<T> {
     fn deep_size_of_children(&self, _: &mut Context) -> usize {

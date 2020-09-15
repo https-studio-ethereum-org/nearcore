@@ -256,6 +256,7 @@ impl Edge {
     }
 }
 
+#[derive(DeepSizeOf)]
 pub struct RoutingTable {
     /// PeerId associated for every known account id.
     account_peers: SizedCache<AccountId, AnnounceAccount>,

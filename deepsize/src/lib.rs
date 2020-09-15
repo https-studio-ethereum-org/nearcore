@@ -449,7 +449,7 @@ impl<T> DeepSizeOf for Mutex<T>
 where
     T: DeepSizeOf,
 {
-    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+    fn deep_size_of_children(&self, _context: &mut Context) -> usize {
         if let Ok(x) = self.lock() {
             x.deep_size_of()
         } else {
@@ -463,7 +463,7 @@ impl<T> DeepSizeOf for Pin<Arc<T>>
 where
     T: DeepSizeOf + ?Sized,
 {
-    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+    fn deep_size_of_children(&self, _context: &mut Context) -> usize {
         let x: &T = self.deref();
         x.deep_size_of()
     }
@@ -497,6 +497,15 @@ where
         self.iter().fold(0, |sum, (key, val)| {
             sum + key.deep_size_of_children(context) + val.deep_size_of_children(context)
         })
+    }
+}
+
+impl<K> DeepSizeOf for std::collections::BTreeSet<K>
+where
+    K: DeepSizeOf,
+{
+    fn deep_size_of_children(&self, context: &mut Context) -> usize {
+        self.iter().fold(0, |sum, key| sum + key.deep_size_of_children(context))
     }
 }
 

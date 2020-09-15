@@ -25,6 +25,8 @@ repository = "https://github.com/Aeledfyr/deepsize/"
 
 [dependencies]
 
+prometheus = "0.8.0"
+actix = "0.9"
 log = "0.4"
 linked-hash-map = "0.5.3"
 cached = "0.12"

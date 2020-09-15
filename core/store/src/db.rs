@@ -6,7 +6,7 @@ use std::marker::PhantomPinned;
 use std::sync::RwLock;
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use deepsize::{known_deep_size, DeepSizeOf};
+use deepsize::{known_deep_size, Context, DeepSizeOf};
 #[cfg(feature = "single_thread_rocksdb")]
 use rocksdb::Env;
 use rocksdb::{
@@ -275,8 +275,14 @@ pub struct RocksDB {
     _pin: PhantomPinned,
 }
 
+impl DeepSizeOf for RocksDB {
+    fn deep_size_of_children(&self, _context: &mut Context) -> usize {
+        0
+    }
+}
+
 // TODO inaccurate
-known_deep_size!(0, RocksDB);
+// known_deep_size!(0, RocksDB);
 
 // DB was already Send+Sync. cf and read_options are const pointers using only functions in
 // this file and safe to share across threads.

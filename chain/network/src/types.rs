@@ -746,14 +746,14 @@ impl PeerMessage {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, DeepSizeOf)]
 pub enum BlockedPorts {
     All,
     Some(HashSet<u16>),
 }
 
 /// Configuration for the peer-to-peer manager.
-#[derive(Clone)]
+#[derive(Clone, DeepSizeOf)]
 pub struct NetworkConfig {
     pub public_key: PublicKey,
     pub secret_key: SecretKey,
@@ -874,7 +874,7 @@ impl FromStr for PatternAddr {
 }
 
 /// Status of the known peers.
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Eq, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Eq, PartialEq, Debug, Clone, DeepSizeOf)]
 pub enum KnownPeerStatus {
     Unknown,
     NotConnected,
@@ -892,7 +892,7 @@ impl KnownPeerStatus {
 }
 
 /// Information node stores about known peers.
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone, DeepSizeOf)]
 pub struct KnownPeerState {
     pub peer_info: PeerInfo,
     pub status: KnownPeerStatus,
@@ -1265,7 +1265,7 @@ pub enum NetworkAdversarialMessage {
     AdvSetSyncInfo(u64),
 }
 
-#[derive(Debug, strum::AsRefStr)]
+#[derive(Debug, strum::AsRefStr, DeepSizeOf)]
 // TODO(#1313): Use Box
 #[allow(clippy::large_enum_variant)]
 pub enum NetworkClientMessages {
