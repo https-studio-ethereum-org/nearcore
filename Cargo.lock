@@ -2967,6 +2967,7 @@ dependencies = [
  "borsh",
  "byteorder",
  "cached",
+ "delay-detector",
  "hex",
  "indicatif 0.13.0",
  "lazy_static",
